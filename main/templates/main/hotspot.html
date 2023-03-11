@@ -187,14 +187,10 @@
 							return;
 						}
 						if(hSpot['key'] == elem['key']) {
-							cloudRF_url['transmitter'] = {
-								'lat' : elem['lat'],
-								'lon' : elem['lon']
-							}
-							cloudRF_url['receiver'] = {
-								'lat' : elem['lat'],
-								'lon' : elem['lon']
-							}
+							cloudRF_url['transmitter']['lat'] = elem['lat'];
+							cloudRF_url['transmitter']['lon'] = elem['lon'];
+							cloudRF_url['receiver']['lat'] = hSpot['lat'];
+							cloudRF_url['receiver']['lon'] = hSpot['lon'];
 						}
 						else {
 							cloudRF_url['points'].push({
