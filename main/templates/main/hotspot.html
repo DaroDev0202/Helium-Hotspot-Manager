@@ -98,7 +98,7 @@
 				cache: false,
 				processData: false,
 				success : function(resp) {
-					settings = resp['settings'];
+					settings = JSON.parse(resp['settings']);
 				},
 				error : function(resp) {
 					alert("Error occured while getting datas in database!");
@@ -176,15 +176,11 @@
 			}
 
 			async function get_all_rules(resp) {
-
 				var result_json = {};
 				$.blockUI();
 				for(hSpot of resp){
 					cloudRF_url = settings;
-					console.log(cloudRF_url);
-					cloudRF_url['antenna'] = {
-						'txg' : hSpot['txg']
-					};
+					cloudRF_url['antenna']['txg'] = parseInt(hSpot['txg']);
 					resp.forEach(elem => {
 						if(hSpot['gpid'] != elem['gpid']){
 							$.unblockUI();
@@ -208,10 +204,11 @@
 							})
 						}
 					})
-					cloudRF_url['points'] = [];
 					if(cloudRF_url['points'].length == 0) {
 						continue;
 					}
+
+					console.log(cloudRF_url)
 					
 					await fetch('https://api.cloudrf.com/points/', {
 						method: 'POST',
@@ -222,7 +219,6 @@
 					})
 					.then(response => response.json())
 					.then(await function(response){
-						console.log(hSpot)
 						result_json[hSpot['gwid']] = [];
 						var transmit = response['Transmitters'];
 						for(i = 0 ; i < transmit.length ; i ++)
@@ -237,9 +233,9 @@
 								}
 							}
 						}
-						console.log(result_json)
 					})
 				}
+				console.log(result_json)
 				download(JSON.stringify(result_json), 'rule.json', 'text/plain');
 				$.unblockUI();
 			}
