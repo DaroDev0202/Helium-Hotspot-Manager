@@ -1,0 +1,122 @@
+.pageholder {
+    padding: 50px;
+}
+.Control{
+    padding-bottom: 15px;
+}
+
+.form-label {
+    text-align: right;
+    text-transform: uppercase;
+}
+
+.myTable{
+    font-size: 14px;
+    min-width: 400px;
+    overflow: hidden;
+    border-radius: 7px 7px 0 0;
+    box-shadow: 0 0 20px rgba(0, 0, 0, .15);
+}
+
+.myTable th {
+    background-color: #2D323E;
+    color: white;
+    font-weight: bold;
+    /* text-transform : uppercase; */
+}
+
+.myTable td, .myTable th {
+    border: 0.01em solid #e3e2e2;
+    vertical-align: middle;
+}
+  
+.myTable tr:nth-child(even){
+    background-color: #f9f8f8;
+}
+
+.modal-body input {
+    width: 100%;
+}
+.modal-dialog{
+    max-width: 700px; 
+}
+
+input:focus {
+    outline: 0;
+    border: 1px solid rgb(3, 154, 204);
+}
+/* Formats the text*/ 
+#Hotspot_table_filter,
+#Hotspot_table_length,
+#Hotspot_table_info,
+#Hotspot_table_paginate{
+    font-size: 12px;
+    font-weight: bold;
+    color: #333;
+}
+
+/* Formats the input fields*/ 
+#Hotspot_table_filter input,
+#Hotspot_table_length select{
+    border: 1px solid rgb(3, 154, 204);
+}
+
+/* Center the loader */
+
+#loader {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 1;
+  width: 150px;
+  height: 150px;
+  margin: -75px 0 0 -75px;
+  border: 16px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 16px solid #3498db;
+  width: 120px;
+  height: 120px;
+  -webkit-animation: spin 2s linear infinite;
+  animation: spin 2s linear infinite;
+}
+
+@-webkit-keyframes spin {
+  0% { -webkit-transform: rotate(0deg); }
+  100% { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Add animation to "page content" */
+.animate-bottom {
+  position: relative;
+  -webkit-animation-name: animatebottom;
+  -webkit-animation-duration: 1s;
+  animation-name: animatebottom;
+  animation-duration: 1s
+}
+
+@-webkit-keyframes animatebottom {
+  from { bottom:-100px; opacity:0 } 
+  to { bottom:0px; opacity:1 }
+}
+
+@keyframes animatebottom { 
+  from{ bottom:-100px; opacity:0 } 
+  to{ bottom:0; opacity:1 }
+}
+
+.navbar-brand{
+  margin-left: 20px;
+}
+.login_comp {
+  margin-right : 20px;
+  text-decoration : none;
+}
+
+.col-md-12 {
+  margin-bottom: 10px;
+}

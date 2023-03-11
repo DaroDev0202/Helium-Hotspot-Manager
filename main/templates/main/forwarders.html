@@ -1,0 +1,169 @@
+{% extends "main/header.html" %}
+
+	{% block content %}
+
+	{% load crispy_forms_tags %}  
+
+	<!-- Rules -->
+	<div class="pageholder">
+        <div class="Control"> 
+			<button type="button" class="btn btn-outline-primary btn-sm" id="add_forwarder"><span class="fa fa-plus"></span> Add New</button>
+			<button type="button" class="btn btn-outline-danger btn-sm" id="make_frd_rule_btn"><span class="fa fa-plus"></span> Make Forwarder Rules </button>
+        </div>
+
+        <div class="linkholder">
+			<table id="Rule_table" class="table table-striped myTable">
+                <thead>
+                    <tr>
+                        <th>NAME</th>
+                        <th>GWID</th>
+                        <th>PORT</th>
+                        <th>IP</th>
+                        <th>GPID</th>
+						<th class="action-color">Actions</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+
+	{% comment %} Add Modal {% endcomment %}
+	<div class="modal fade" tabindex="-1" role="dialog" id="spot_modal">
+		<div class="modal-dialog" role="document">
+		  <div class="modal-content" id="bs-modal-content"></div>
+		</div>
+	</div>
+	<script>
+		
+		$.ajaxSetup({ 
+			beforeSend: function(xhr, settings) {
+				function getCookie(name) {
+					var cookieValue = null;
+					if (document.cookie && document.cookie != '') {
+						var cookies = document.cookie.split(';');
+						for (var i = 0; i < cookies.length; i++) {
+							var cookie = jQuery.trim(cookies[i]);
+							// Does this cookie string begin with the name we want?
+							if (cookie.substring(0, name.length + 1) == (name + '=')) {
+								cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+								break;
+							}
+						}
+					}
+					return cookieValue;
+				}
+				if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
+					// Only send the token to relative URLs i.e. locally.
+					xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+				}
+			} 
+	   });
+		$(document).ready(function() {
+			
+			function download(content, fileName, contentType) {
+				var a = document.createElement("a");
+				var file = new Blob([content], {type: contentType});
+				a.href = URL.createObjectURL(file);
+				a.download = fileName;
+				a.click();
+			}
+			var table = $('#Rule_table').DataTable({
+				dom: 'Bfrtip',
+				"ajax": {
+					"processing": true,
+					"url": "forwarders/get_forwarders",
+					"dataSrc": ""
+				},
+				select: true,
+				bSort: false,
+				"columns": [
+					{ "data": "name"},
+					{ "data": "gwid"},
+					{ "data": "port"},
+					{ "data": "ip"},
+					{ "data": "gpid"},
+					{ 
+						"data" : null,
+						render: function ( data, type, row ) {
+							return '<button type="button" class="update_forwarder btn btn-sm btn-outline-secondary" data-form-url="forwarders/update_forwarder/'+data.id+'"><span class="fa fa-pencil"></span> Edit</button><button type="button" class="btn btn-sm btn-outline-danger delete_forwarder" style="margin-left: 10px" data-form-url="forwarders/delete_forwarder/'+data.id+'"><span class="fa fa-trash"></span> Delete</button>';
+						}
+					}
+				],
+				"buttons": ['copy', 'csv', 'excel', 'print'],
+				"fnDrawCallback": function( oSettings ) {
+					$('.delete_forwarder').each(function() {
+						$(this).modalForm({
+							formURL: $(this).data("form-url"), 
+							modalID : "#spot_modal",
+							modalContent: '#bs-modal-content',
+							modalForm: '#bs-modal-content form',
+							isDeleteForm: true
+						});
+					});
+					
+					$(".update_forwarder").each(function () {
+						$(this).modalForm({
+						  formURL: $(this).data("form-url"),
+						  modalID : "#spot_modal",
+						  modalContent: '#bs-modal-content',
+						  modalForm: '#bs-modal-content form',
+						});
+					});
+				}
+			});
+
+			$("#add_forwarder").modalForm({
+				modalID : "#spot_modal",
+				modalContent: '#bs-modal-content',
+				modalForm: '#bs-modal-content form',
+				formURL: "forwarders/add_forwarder"
+			});
+
+			$('#make_frd_rule_btn').click(function() {
+				$.ajax({
+					type : 'POST',
+					url : 'forwarders/make_fwrd_rule',
+					success : function(resp) {
+						fwds = resp['fwrd'];
+						hSpots = resp['hotspot'];
+
+						json_result = {}
+
+						for(fwd of fwds) {
+							json_result[fwd['gwid']] = []
+							for(hSpot of hSpots) {
+								if(fwd['gpid'] == hSpot['gpid']) {
+									json_result[fwd['gwid']].push({
+										'gateway_id' : hSpot['gwid']
+									});
+								}
+							}
+						}
+
+						download(JSON.stringify(json_result), 'rule.json', 'text/plain');
+						console.log(json_result);
+					},
+					error: function(resp) {
+					}
+				})
+			})
+		});
+	</script>
+	<div class="modal fade" id="delete-item-modal">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-body">
+					<p>Are you sure, You want to remove this forwarder?</p>
+				</div>
+				<div class="justify-content-between mb-2 mr-2 text-right">
+					<form method="post" id="item-delete-form" action="">
+						<button type="button" class="btn btn-secondary mr-1" data-dismiss="modal">Cancel</button>
+						{% csrf_token %}
+						<button type="submit" class="btn btn-danger" id="confirm-delete-item-button">Delete</button>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	{% endblock %}

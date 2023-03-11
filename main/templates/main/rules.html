@@ -1,0 +1,227 @@
+{% extends "main/header.html" %}
+
+	{% block content %}
+
+	{% load crispy_forms_tags %}  
+
+	{% csrf_token %}
+
+	<!-- Rules -->
+	<div class="pageholder">
+        <div class="linkholder">
+			<table id="Rule_table" class="table table-striped myTable">
+                <thead>
+                    <tr>
+                        <th>NAME</th>
+                        <th>GATEWAY_ID</th>
+                        <th>PORT</th>
+                        <th>IP</th>
+						<th class="action-color">Actions</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+
+	{% comment %} Add Modal {% endcomment %}
+	<div class="modal fade" tabindex="-1" role="dialog" id="spot_modal">
+		<div class="modal-dialog" role="document">
+		  <div class="modal-content" id="bs-modal-content"></div>
+		</div>
+	</div>
+	<script>
+		$.ajaxSetup({ 
+			beforeSend: function(xhr, settings) {
+				function getCookie(name) {
+					var cookieValue = null;
+					if (document.cookie && document.cookie != '') {
+						var cookies = document.cookie.split(';');
+						for (var i = 0; i < cookies.length; i++) {
+							var cookie = jQuery.trim(cookies[i]);
+							// Does this cookie string begin with the name we want?
+							if (cookie.substring(0, name.length + 1) == (name + '=')) {
+								cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+								break;
+							}
+						}
+					}
+					return cookieValue;
+				}
+				if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
+					// Only send the token to relative URLs i.e. locally.
+					xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+				}
+			} 
+	   });
+		$(document).ready(function() {
+			
+			var pF = (f) => {
+				return parseFloat(f).toFixed(4)
+			}
+
+			function download(content, fileName, contentType) {
+				var a = document.createElement("a");
+				var file = new Blob([content], {type: contentType});
+				a.href = URL.createObjectURL(file);
+				a.download = fileName;
+				a.click();
+			}
+
+			var table = $('#Rule_table').DataTable({
+				"ajax": {
+					"processing": true,
+					"url": "rules/get_rules",
+					"dataSrc": ""
+				},
+				select: true,
+				bSort: false,
+				"columns": [
+					{ "data": "name"},
+					{ "data": "key"},
+					{ "data": "port"},
+					{ "data": "ip"},
+					{ 
+						"data" : null,
+						render: function ( data, type, row ) {
+							return '<button type="button" class="btn btn-sm btn-outline-danger make_rule" style="margin-left: 10px" key="'+data.key+'" gpid= "' + data.gpid + '" gwid= "' + data.gwid + '"><span class="fa fa-edit"></span> Make Rule </button>';
+						}
+					}
+				],
+				"fnDrawCallback": function( oSettings ) {
+					$('.make_rule').click(function() {
+						var key = $(this).attr('key');
+						var gpid = $(this).attr('gpid');
+						var gwid = $(this).attr('gwid');
+						$.ajax({
+							type : 'post',
+							url : '/rules/make_rule',
+							contentType: false,
+							cache: false,
+							processData: false,
+							data : JSON.stringify({
+								'gpid' : gpid,
+							}),
+							success : function(resp) {
+								var hSpot = resp;
+								var cloudRF_url = {
+									"site": "Points",
+									"network": "HNT",
+									"transmitter": {
+									  "alt": 100,
+									  "frq": 915,
+									  "txw": 0.5,
+									  "bwi": 0.1
+									},
+									"points": [],
+									"antenna": {
+									  "txg": 8,
+									  "txl": 0,
+									  "ant": 1,
+									  "azi": 0,
+									  "tlt": 0,
+									  "hbw": 0,
+									  "vbw": 0,
+									  "pol": "v"
+									},
+									"receiver": {
+									  "alt": 0.1,
+									  "rxg": 8,
+									  "rxs": -90
+									},
+									"model": {
+									  "pm": 1,
+									  "pe": 2,
+									  "cli": 6,
+									  "ked": 0,
+									  "rel": 95,
+									  "ter": 4
+									},
+									"environment": {
+									  "clm": 1,
+									  "cll": 2
+									},
+									"output": {
+									  "units": "metric",
+									  "col": "RAINBOW.dBm",
+									  "out": 2,
+									  "ber": 0,
+									  "mod": 1,
+									  "nf": -114,
+									  "res": 10,
+									  "rad": 5
+									}
+								}
+								resp.forEach(elem => {
+									if(key == elem['key']) {
+										cloudRF_url['transmitter']['lat'] = elem['lat'];
+										cloudRF_url['receiver']['lat'] = elem['lat'];
+										cloudRF_url['transmitter']['lon'] = elem['lon'];
+										cloudRF_url['receiver']['lon'] = elem['lon'];
+									}
+									else {
+										cloudRF_url['points'].push({
+											'lat' : elem['lat'],
+											'lon' : elem['lon'],
+											'alt' : 1
+										})
+									}
+								})
+
+								if(cloudRF_url['points'].length == 0) {
+									alert("No points");
+									return;
+								}
+								
+								fetch('https://api.cloudrf.com/points/', {
+									method: 'POST',
+									headers :{
+										'key': '48235-a25d941eb63be2ac722207402eef2ba3a8ef9022'
+									},
+									body: JSON.stringify(cloudRF_url)
+								})
+								.then(response => response.json())
+								.then(response => {
+									var result_json = {};
+									result_json[gwid] = [];
+									var transmit = response['Transmitters'];
+									for(i = 0 ; i < transmit.length ; i ++)
+									{
+										for(j = 0; j < hSpot.length ; j ++) {
+											if(pF(hSpot[j]['lat']) == pF(transmit[i]['Latitude']) && pF(hSpot[j]['lon']) == pF(transmit[i]['Longitude'])){
+												result_json[gwid].push({
+													'gateway_id': hSpot[j]['gwid'],
+													'rssi' : transmit[i]['Signal power at receiver dBm']
+												})
+											}
+										}
+									}
+									download(JSON.stringify(result_json), 'rule.json', 'text/plain');
+								})
+							},
+							error : function(resp) {
+								alert("Error occured while getting datas in database!");
+							}
+						})
+					});
+				}
+			});
+		});
+	</script>
+	<div class="modal fade" id="delete-item-modal">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-body">
+					<p>Are you sure, You want to remove this rule?</p>
+				</div>
+				<div class="justify-content-between mb-2 mr-2 text-right">
+					<form method="post" id="item-delete-form" action="">
+						<button type="button" class="btn btn-secondary mr-1" data-dismiss="modal">Cancel</button>
+						{% csrf_token %}
+						<button type="submit" class="btn btn-danger" id="confirm-delete-item-button">Delete</button>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	{% endblock %}

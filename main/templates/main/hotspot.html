@@ -1,0 +1,359 @@
+{% extends "main/header.html" %}
+
+	{% block content %}
+
+	{% load crispy_forms_tags %}  
+
+	<!-- Hotspots -->
+	<div class="pageholder">
+        <div class="Control"> 
+			<button type="button" class="btn btn-outline-primary btn-sm" id="add_hotspot"><span class="fa fa-plus"></span> Add New</button>
+			<button type="button" class="btn btn-outline-primary btn-sm" id="import_setting"><span class="fa fa-gear"></span> Settings from JSON</button>
+			<button type="button" class="btn btn-outline-danger btn-sm" id="make_all_rule"><span class="fa fa-plus"></span> Make All of Rules</button>
+			<button type="button" class="btn btn-outline-danger btn-sm" id="make_rule_gpid"><span class="fa fa-plus"></span> Make Rules by GPID</button>
+        </div>
+
+        <div class="linkholder">
+			<table id="Hotspot_table" class="table table-striped myTable">
+                <thead>
+                    <tr>
+                        <th>NAME</th>
+                        <th>KEY</th>
+                        <th>PORT</th>
+                        <th>IP</th>
+                        <th>GPID</th>
+                        <th>GWID</th>
+                        <th>RFCID</th>
+                        <th>LAT</th>
+                        <th>LON</th>
+						<th>Weight</th>
+						<th>dBi</th>
+						<th class="action-color">Actions</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+
+	{% comment %} Add Modal {% endcomment %}
+	<div class="modal fade" tabindex="-1" role="dialog" id="spot_modal">
+		<div class="modal-dialog" role="document">
+		  <div class="modal-content" id="bs-modal-content"></div>
+		</div>
+	</div>
+
+	{% comment %} Make rule by gpid {% endcomment %}
+	
+	<div class="modal fade" tabindex="-1" role="dialog" id="rule_modal">
+		<div class="modal-dialog" role="document">
+		  <div class="modal-content" id="rule-modal-content">
+			<div class="modal-header">
+				<h4 class="modal-title">Select Group</h4>
+				<button type="button" class="close" data-dismiss="modal">&times;</button>
+			  </div>
+			  <div class="modal-body">
+					<select class="form-select" aria-label="Default select example" id="group_select">
+						<option selected>Select Group</option>
+					</select>
+			  </div>
+			  <div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+				<button type="button" class="btn btn-primary" id="rule_group_btn">Make Rule</button>
+			  </div>
+		  </div>
+		</div>
+	</div>
+
+	<script>
+		var settings = "";
+		$.ajaxSetup({ 
+			beforeSend: function(xhr, settings) {
+				function getCookie(name) {
+					var cookieValue = null;
+					if (document.cookie && document.cookie != '') {
+						var cookies = document.cookie.split(';');
+						for (var i = 0; i < cookies.length; i++) {
+							var cookie = jQuery.trim(cookies[i]);
+							// Does this cookie string begin with the name we want?
+							if (cookie.substring(0, name.length + 1) == (name + '=')) {
+								cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+								break;
+							}
+						}
+					}
+					return cookieValue;
+				}
+				if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
+					// Only send the token to relative URLs i.e. locally.
+					xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+				}
+			} 
+	   });
+		$(document).ready(function() {
+			// Get Settings from DB 
+			$.ajax({
+				type : 'post',
+				url : '/hotspots/download_setting',
+				contentType: false,
+				cache: false,
+				processData: false,
+				success : function(resp) {
+					settings = resp['settings'];
+				},
+				error : function(resp) {
+					alert("Error occured while getting datas in database!");
+				}
+			})
+
+			var table = $('#Hotspot_table').DataTable({
+				dom: 'Bfrtip',
+				ajax: {
+					"processing": true,
+					"url": "hotspots/get_hotspots",
+					"dataSrc": ""
+				},
+				select: true,
+				bSort: false,
+				columns: [
+					{ "data": "name"},
+					{ "data": "key"},
+					{ "data": "port"},
+					{ "data": "ip"},
+					{ "data": "gpid"},
+					{ "data": "gwid"},
+					{ "data": "rfcid"},
+					{ "data": "lat"},
+					{ "data": "lon"},
+					{ "data": "weight" },
+					{ "data": "txg" },
+					{ 
+						"data" : null,
+						render: function ( data, type, row ) {
+							return '<button type="button" class="update_hotspot btn btn-sm btn-outline-secondary" data-form-url="hotspots/update_hotspot/'+data.id+'"><span class="fa fa-pencil"></span> Edit</button><button type="button" class="btn btn-sm btn-outline-danger delete_hotspot" style="margin-left: 10px" data-form-url="hotspots/delete_hotspot/'+data.id+'"><span class="fa fa-trash"></span> Delete</button>';
+						}
+					}
+				],
+				"buttons": ['copy', 'csv', 'excel', 'print'],
+				"fnDrawCallback": function( oSettings ) {
+					$('.delete_hotspot').each(function() {
+						$(this).modalForm({
+							formURL: $(this).data("form-url"), 
+							modalID : "#spot_modal",
+							modalContent: '#bs-modal-content',
+							modalForm: '#bs-modal-content form',
+							isDeleteForm: true
+						});
+					});
+					
+					$(".update_hotspot").each(function () {
+						$(this).modalForm({
+						  formURL: $(this).data("form-url"),
+						  modalID : "#spot_modal",
+						  modalContent: '#bs-modal-content',
+						  modalForm: '#bs-modal-content form',
+						});
+					});
+				}
+			});
+
+			$("#add_hotspot").modalForm({
+				modalID : "#spot_modal",
+				modalContent: '#bs-modal-content',
+				modalForm: '#bs-modal-content form',
+				formURL: "hotspots/add_hotspot"
+			});
+
+			var pF = (f) => {
+				return parseFloat(f).toFixed(4)
+			}
+
+			function download(content, fileName, contentType) {
+				var a = document.createElement("a");
+				var file = new Blob([content], {type: contentType});
+				a.href = URL.createObjectURL(file);
+				a.download = fileName;
+				a.click();
+			}
+
+			async function get_all_rules(resp) {
+
+				var result_json = {};
+				$.blockUI();
+				for(hSpot of resp){
+					cloudRF_url = settings;
+					console.log(cloudRF_url);
+					cloudRF_url['antenna'] = {
+						'txg' : hSpot['txg']
+					};
+					resp.forEach(elem => {
+						if(hSpot['gpid'] != elem['gpid']){
+							$.unblockUI();
+							return;
+						}
+						if(hSpot['key'] == elem['key']) {
+							cloudRF_url['transmitter'] = {
+								'lat' : elem['lat'],
+								'lon' : elem['lon']
+							}
+							cloudRF_url['receiver'] = {
+								'lat' : elem['lat'],
+								'lon' : elem['lon']
+							}
+						}
+						else {
+							cloudRF_url['points'].push({
+								'lat' : elem['lat'],
+								'lon' : elem['lon'],
+								'alt' : 1
+							})
+						}
+					})
+					cloudRF_url['points'] = [];
+					if(cloudRF_url['points'].length == 0) {
+						continue;
+					}
+					
+					await fetch('https://api.cloudrf.com/points/', {
+						method: 'POST',
+						headers :{
+							'key': '48235-a25d941eb63be2ac722207402eef2ba3a8ef9022'
+						},
+						body: JSON.stringify(cloudRF_url)
+					})
+					.then(response => response.json())
+					.then(await function(response){
+						console.log(hSpot)
+						result_json[hSpot['gwid']] = [];
+						var transmit = response['Transmitters'];
+						for(i = 0 ; i < transmit.length ; i ++)
+						{
+							for(j = 0; j < resp.length ; j ++) {
+								if(pF(resp[j]['lat']) == pF(transmit[i]['Latitude']) && pF(resp[j]['lon']) == pF(transmit[i]['Longitude'])){
+									result_json[hSpot['gwid']].push({
+										'gateway_id': resp[j]['gwid'],
+										'rssi' : transmit[i]['Signal power at receiver dBm'],
+										'weight' : hSpot['weight']
+									})
+								}
+							}
+						}
+						console.log(result_json)
+					})
+				}
+				download(JSON.stringify(result_json), 'rule.json', 'text/plain');
+				$.unblockUI();
+			}
+			$('#group_select').select();
+			$('#make_all_rule').click(async function() {
+				$.ajax({
+					type : 'post',
+					url : '/rules/make_rules',
+					contentType: false,
+					cache: false,
+					processData: false,
+					success : function(resp) {
+						get_all_rules(resp)
+					},
+					error : function(resp) {
+						alert("Error occured while getting datas in database!");
+					}
+				})
+			})
+			$('#make_rule_gpid').click(function() {
+				$('#group_select option').remove();
+				$('#group_select').append('<option selected>Select Group</option>')
+				$.ajax({
+					type : 'post',
+					url : 'hotspots/get_groups',
+					success : function(resp) {
+						for(i = 0 ; i < resp.length ; i++) 
+						{
+							gpid = resp[i];
+							$('#group_select').append('<option value="'+gpid['gpid']+'">' + gpid['gpid'] + '</option>');
+						}
+					}
+				})
+				$('#rule_modal').modal();
+			})
+
+			$('#import_setting').on('click', function() {
+				// Select JSON file
+				var input = document.createElement('input');
+                input.type = 'file';
+
+                input.onchange = e => {
+                    var file = e.target.files[0];
+
+					console.log(file.type);
+
+                    if(file.type != 'application/json') {
+                        alert('It is not JSON file format!');
+                        return;
+                    }
+                    
+                    /*-------- Get Settings From JSON -----------*/
+
+                    var reader = new FileReader();
+                    reader.readAsText(file, 'UTF-8');
+
+                    reader.onload = readerEvent => {
+                        settings = readerEvent.target.result;
+
+						// Upload Settings Data to Server
+	
+						$.ajax({
+							type : 'post',
+							url : '/hotspots/upload_setting',
+							data : JSON.stringify({
+								'data' : settings
+							}),
+							contentType: false,
+							cache: false,
+							processData: false,
+							success : function(resp) {
+								alert("Success to Upload Settings");
+								console.log(resp);
+							},
+							error : function(resp) {
+								alert("Error occured while getting datas in database!");
+							}
+						})
+                    }
+                }
+
+                input.click();
+			})
+
+			$('#rule_group_btn').click(function() {
+				var gpid = $('#group_select option:selected').val();
+				if(gpid == 'Select Group') {
+					alert('select group');
+					return;
+				}
+				$('#rule_modal').modal('toggle');
+				
+				$.ajax({
+					type : 'post',
+					url : '/rules/make_rule',
+					data : JSON.stringify({
+						'gpid' : gpid
+					}),
+					contentType: false,
+					cache: false,
+					processData: false,
+					success : function(resp) {
+						if(resp.length == 1) {
+							alert('only one gateway');
+							return;
+						}
+						get_all_rules(resp)
+					},
+					error : function(resp) {
+						alert("Error occured while getting datas in database!");
+					}
+				})
+			})
+		});
+	</script>
+
+	{% endblock %}

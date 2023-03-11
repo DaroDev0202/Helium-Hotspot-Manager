@@ -1,0 +1,35 @@
+<!--Navbar-->
+<nav class="navbar navbar-expand-sm navbar-dark bg-dark">
+    <a class="navbar-brand" href="/">
+       Packet Manager
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-target="#navbarText" aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarText">
+      <ul class="navbar-nav mr-auto">
+        <li class="nav-item">
+          <a class="nav-link" href="/home">Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/hotspots">Hotspots</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/rules">Rules</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/forwarders">Forwarders</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/settings">Settings</a>
+        </li>
+      </ul>
+    </div>
+    <div class="login">
+        {% if user.is_authenticated %}
+          <a class="login_comp" href="/logout">Logout</a>
+        {% else %}
+          <a class="login_comp" href="/login">Login</a>
+        {% endif %}
+    </div> 
+</nav>

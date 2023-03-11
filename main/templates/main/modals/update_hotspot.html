@@ -1,0 +1,79 @@
+{% load widget_tweaks %}
+
+<div id="loader" style="display: none"></div>
+<form method="post" action="" id="mainDiv">
+  {% csrf_token %}
+  <div class="modal-header">
+    <h5 class="modal-title">Create new Hotspot</h5>
+    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+
+  <div class="modal-body" id="add_modal">
+    <div class="{% if form.non_field_errors %}invalid{% endif %} mb-2">
+        {% for error in form.non_field_errors %}
+          {{ error }}
+        {% endfor %}
+    </div>
+    {% for field in form %}
+      <div class="row col-md-12 form-group{% if field.errors %} invalid{% endif %}">
+        <div class="col-md-3 form-label">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        </div>
+        <div class="col-md-9">
+            {% render_field field class="form-control" placeholder=field.label %}
+        </div>
+        <div class="{% if field.errors %} invalid{% endif %}">
+          {% for error in field.errors %}
+            <p class="help-block">{{ error }}</p>
+          {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <div class="modal-footer">
+    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+    <button type="submit" class="btn btn-primary">Update</button>
+  </div>
+</form>
+<script>
+  $(document).ready(function() {
+    $('#id_name').attr( "readonly", true );
+    $('#id_lat').attr( "readonly", true );
+    $('#id_lon').attr( "readonly", true );
+    $('#add_modal>div:nth-child(2)').after('<div class="row col-md-12 form-group" style="justify-content: right;"><btn role="button" class="btn btn-sm btn-outline-primary col-md-3" id="get_btn">Get Data from API</button></div>');
+
+    $("#get_btn").on('click', function() {
+      if($('#id_key').val() == "")
+      {
+        alert("Input key");
+        return;
+      }
+      var url = "https://api.helium.io/v1/hotspots/"+$('#id_key').val();
+      
+      $("#loader").css('display', '');
+      $.blockUI();
+      $.get({
+        'url' : url,
+        type: 'GET',  
+        cache: false,
+        success: function(data) {
+          console.log(data);
+          data = data['data']
+          $('#id_name').val(data['name'])
+          $('#id_lat').val(parseFloat(data['lat']).toFixed(6))
+          $('#id_lon').val(parseFloat(data['lng']).toFixed(6))
+          $.unblockUI();
+          $("#loader").css('display', 'none');
+        },
+        error: function(xhr, status, error) {
+          alert("Wrong address");
+          $.unblockUI();
+          $("#loader").css('display', 'none');
+        }
+      })
+    })
+  });
+</script>
