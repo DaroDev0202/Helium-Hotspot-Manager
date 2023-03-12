@@ -76,15 +76,27 @@ def upload_setting(req):
     #                     'lon',
     #                     'gwid',
     #                     'id'))
-    setting = Settings.objects.get(id=1);
-    setting.settings = data.get('data');
-    setting.save();
+    try:
+        setting = Settings.objects.get(id=1)
+    except:
+        setting = None
+    str = data.get('data')
+    if setting is not None:
+        setting.settings = str;
+        setting.save();
+    else:
+        Settings.objects.create(id=1, settings=str)
     return JsonResponse('success', safe = False)
 def download_setting(self):
     ret = list(Settings.objects.filter(id = 1)\
                 .values(
                         'settings'))
-    return JsonResponse(ret[0], safe = False)
+    result = {};
+    if len(ret) == 0 :
+        result = {}
+    else :
+        result = ret[0]
+    return JsonResponse(result, safe = False)
 # Get Hotspots
 def get_hotspots(self):
     result_list = list(Hotspots.objects.all()\
