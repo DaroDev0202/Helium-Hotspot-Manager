@@ -179,7 +179,7 @@
 				var result_json = {};
 				$.blockUI();
 				for(hSpot of resp){
-					cloudRF_url = settings;
+					cloudRF_url = JSON.parse(settings);
 					cloudRF_url['antenna']['txg'] = parseInt(hSpot['txg']);
 					resp.forEach(elem => {
 						if(hSpot['gpid'] != elem['gpid']){
