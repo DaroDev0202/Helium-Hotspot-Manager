@@ -9,7 +9,7 @@
         <div class="Control"> 
 			<button type="button" class="btn btn-outline-primary btn-sm" id="add_hotspot"><span class="fa fa-plus"></span> Add New</button>
 			<button type="button" class="btn btn-outline-primary btn-sm" id="import_setting"><span class="fa fa-gear"></span> Settings from JSON</button>
-			<button type="button" class="btn btn-outline-danger btn-sm" id="make_all_rule"><span class="fa fa-plus"></span> Make All of Rules</button>
+			{% comment %} <button type="button" class="btn btn-outline-danger btn-sm" id="make_all_rule"><span class="fa fa-plus"></span> Make All of Rules</button> {% endcomment %}
 			<button type="button" class="btn btn-outline-danger btn-sm" id="make_rule_gpid"><span class="fa fa-plus"></span> Make Rules by GPID</button>
         </div>
 
@@ -23,9 +23,9 @@
                         <th>IP</th>
                         <th>GPID</th>
                         <th>GWID</th>
-                        <th>RFCID</th>
                         <th>LAT</th>
                         <th>LON</th>
+                        <th>Height</th>
 						<th>Weight</th>
 						<th>dBi</th>
 						<th class="action-color">Actions</th>
@@ -121,10 +121,10 @@
 					{ "data": "ip"},
 					{ "data": "gpid"},
 					{ "data": "gwid"},
-					{ "data": "rfcid"},
 					{ "data": "lat"},
 					{ "data": "lon"},
-					{ "data": "weight" },
+					{ "data": "height"},
+					{ "data": "weight"},
 					{ "data": "txg" },
 					{ 
 						"data" : null,
@@ -196,7 +196,7 @@
 							cloudRF_url['points'].push({
 								'lat' : elem['lat'],
 								'lon' : elem['lon'],
-								'alt' : 1
+								'alt' : elem['height']
 							})
 						}
 					})

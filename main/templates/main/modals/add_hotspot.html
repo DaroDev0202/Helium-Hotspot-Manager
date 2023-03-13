@@ -61,7 +61,8 @@
             return;
           }
 
-          var url = "https://api.helium.io/v1/hotspots/"+$('#id_key').val();
+          {% comment %} var url = "https://api.helium.io/v1/hotspots/"+$('#id_key').val(); {% endcomment %}
+          var url = "https://etl.api.hotspotrf.com/v1/hotspots/"+$('#id_key').val();
 
           $("#loader").css('display', '');
           $.blockUI();

@@ -5,7 +5,7 @@ from .models import *
 class HotspotsModelForm(BSModalModelForm):
     class Meta:
         model = Hotspots
-        fields = ['name','key','port','ip','gpid','gwid','rfcid','lat','lon','weight', 'txg']
+        fields = ['name','key','port','ip','gpid','gwid','lat','lon','height', 'weight', 'txg']
         
 class RulesModelForm(BSModalModelForm):
     class Meta:

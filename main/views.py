@@ -107,9 +107,9 @@ def get_hotspots(self):
                         'ip',
                         'gpid',
                         'gwid',
-                        'rfcid',
                         'lat',
                         'lon',
+                        'height',
                         'weight',
                         'txg',
                         'id'))
