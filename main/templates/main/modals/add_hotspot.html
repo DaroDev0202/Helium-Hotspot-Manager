@@ -71,6 +71,7 @@
             type: 'GET',  
             cache: false,
             success: function(data) {
+              console.log(data);
               data = data['data']
               $('#id_name').val(data['name'])
               $('#id_lat').val(parseFloat(data['lat']).toFixed(6))

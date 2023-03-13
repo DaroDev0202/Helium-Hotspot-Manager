@@ -11,6 +11,7 @@
 			<button type="button" class="btn btn-outline-primary btn-sm" id="import_setting"><span class="fa fa-gear"></span> Settings from JSON</button>
 			{% comment %} <button type="button" class="btn btn-outline-danger btn-sm" id="make_all_rule"><span class="fa fa-plus"></span> Make All of Rules</button> {% endcomment %}
 			<button type="button" class="btn btn-outline-danger btn-sm" id="make_rule_gpid"><span class="fa fa-plus"></span> Make Rules by GPID</button>
+			<button type="button" class="btn btn-outline-primary btn-sm" id="update_hotspots"><span class="fa fa-refresh"></span> Update All </button>
         </div>
 
         <div class="linkholder">
@@ -189,6 +190,10 @@
 						if(hSpot['key'] == elem['key']) {
 							cloudRF_url['transmitter']['lat'] = elem['lat'];
 							cloudRF_url['transmitter']['lon'] = elem['lon'];
+							if(!elem.hasOwnProperty('height'))
+								cloudRF_url['transmitter']['alt'] = 1;
+							else
+								cloudRF_url['transmitter']['alt'] = elem['height'];
 							cloudRF_url['receiver']['lat'] = hSpot['lat'];
 							cloudRF_url['receiver']['lon'] = hSpot['lon'];
 						}
@@ -196,7 +201,7 @@
 							cloudRF_url['points'].push({
 								'lat' : elem['lat'],
 								'lon' : elem['lon'],
-								'alt' : elem['height']
+								'alt' : ((elem.hasOwnProperty('height'))?(elem['height']):1)
 							})
 						}
 					})
@@ -218,6 +223,7 @@
 						for(i = 0 ; i < transmit.length ; i ++)
 						{
 							for(j = 0; j < resp.length ; j ++) {
+								console.log(resp[j], transmit[i])
 								if(pF(resp[j]['lat']) == pF(transmit[i]['Latitude']) && pF(resp[j]['lon']) == pF(transmit[i]['Longitude'])){
 									if(transmit[i]['Signal power at receiver dBm'] < -130)
 										continue;
@@ -314,6 +320,28 @@
                 }
 
                 input.click();
+			})
+
+			$('#update_hotspots').click(function() {
+				$.blockUI();
+				$.ajax({
+					type : 'post',
+					url : '/hotspots/update_all',
+					contentType: false,
+					cache: false,
+					processData: false,
+					success : function(resp) {
+						console.log(resp)
+						alert('Success to update hotspots in database')
+						location.href = '/hotspots'
+						$.unblockUI();
+					},
+					error : function(resp) {
+						alert("Error occured while updating database");
+						console.log(resp)
+						$.unblockUI();
+					}
+				})
 			})
 
 			$('#rule_group_btn').click(function() {

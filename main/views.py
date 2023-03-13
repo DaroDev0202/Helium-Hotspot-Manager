@@ -21,6 +21,12 @@ from .models import *
 
 import json
 
+import requests
+import time
+from rest_framework import status
+from rest_framework.response import Response
+MAX_RETRIES = 5
+
 # Create your views here.
 def homepage(request):
     return render(request = request, template_name='main/home.html')
@@ -148,6 +154,28 @@ class update_hotspot(BSModalUpdateView):
     success_message = 'Success: Hotspot was updated.'
     success_url = '/hotspots'
     
+# Update all hotspots
+
+def update_all_hotspots(req):
+    hotspots = Hotspots.objects.all()
+    url = "https://etl.api.hotspotrf.com/v1/hotspots/"
+    for hotspot in hotspots:
+        attempt_num = 0  # keep track of how many times we've retried
+        while attempt_num < MAX_RETRIES:
+            r = requests.get(url + hotspot.key, timeout=10)
+            if r.status_code == 200:
+                data = r.json()
+                data = data['data']
+                hotspot.lat = data["lat"]
+                hotspot.lon = data["lng"]
+                hotspot.save()
+                break;
+            else:
+                attempt_num += 1
+                # You can probably use a logger to log the error here
+                time.sleep(5)  # Wait for 5 seconds before re-trying
+    return JsonResponse('success',safe = False)
+
 # Get Rules
 def get_rules(self):
     result_list = list(Hotspots.objects.all()\

@@ -51,7 +51,8 @@
         alert("Input key");
         return;
       }
-      var url = "https://api.helium.io/v1/hotspots/"+$('#id_key').val();
+      {% comment %} var url = "https://api.helium.io/v1/hotspots/"+$('#id_key').val(); {% endcomment %}
+      var url = "https://etl.api.hotspotrf.com/v1/hotspots/"+$('#id_key').val();
       
       $("#loader").css('display', '');
       $.blockUI();
@@ -63,8 +64,8 @@
           console.log(data);
           data = data['data']
           $('#id_name').val(data['name'])
-          $('#id_lat').val(parseFloat(data['lat']).toFixed(6))
-          $('#id_lon').val(parseFloat(data['lng']).toFixed(6))
+          $('#id_lat').val(parseFloat(data['lat']).toFixed(13))
+          $('#id_lon').val(parseFloat(data['lng']).toFixed(13))
           $.unblockUI();
           $("#loader").css('display', 'none');
         },

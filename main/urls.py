@@ -9,6 +9,7 @@ urlpatterns = [
     path("login", views.login_request, name='login'),
     path("logout", views.logout_request, name= "logout"),
     path("hotspots", views.hotspot_request, name="hotspots"),
+    path('hotspots/update_all', views.update_all_hotspots, name='update_all_hotspot'),
     path("rules", views.rules_request, name="rules"),
     path("forwarders", views.forwarders_request, name="forwarders"),
     
