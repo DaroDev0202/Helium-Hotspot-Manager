@@ -98,7 +98,7 @@
 				cache: false,
 				processData: false,
 				success : function(resp) {
-					settings = JSON.parse(resp['settings']);
+					settings = resp['settings'];
 				},
 				error : function(resp) {
 					alert("Error occured while getting datas in database!");
@@ -203,8 +203,6 @@
 					if(cloudRF_url['points'].length == 0) {
 						continue;
 					}
-
-					console.log(cloudRF_url)
 					
 					await fetch('https://api.cloudrf.com/points/', {
 						method: 'POST',
@@ -221,6 +219,8 @@
 						{
 							for(j = 0; j < resp.length ; j ++) {
 								if(pF(resp[j]['lat']) == pF(transmit[i]['Latitude']) && pF(resp[j]['lon']) == pF(transmit[i]['Longitude'])){
+									if(transmit[i]['Signal power at receiver dBm'] < -130)
+										continue;
 									result_json[hSpot['gwid']].push({
 										'gateway_id': resp[j]['gwid'],
 										'rssi' : transmit[i]['Signal power at receiver dBm'],
@@ -290,7 +290,6 @@
 
                     reader.onload = readerEvent => {
                         settings = readerEvent.target.result;
-						console.log(settings);
 
 						// Upload Settings Data to Server
 	
