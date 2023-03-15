@@ -207,6 +207,7 @@ def make_rule(req):
                         'lon',
                         'gwid',
                         'weight',
+                        'height',
                         'txg',
                         'id'))
     return JsonResponse(result_list, safe = False)

@@ -196,6 +196,11 @@
 								cloudRF_url['transmitter']['alt'] = elem['height'];
 							cloudRF_url['receiver']['lat'] = hSpot['lat'];
 							cloudRF_url['receiver']['lon'] = hSpot['lon'];
+							console.log(elem);
+							if(!elem.hasOwnProperty('height'))
+								cloudRF_url['receiver']['alt'] = 1;
+							else
+								cloudRF_url['receiver']['alt'] = elem['height'];
 						}
 						else {
 							cloudRF_url['points'].push({
@@ -223,7 +228,6 @@
 						for(i = 0 ; i < transmit.length ; i ++)
 						{
 							for(j = 0; j < resp.length ; j ++) {
-								console.log(resp[j], transmit[i])
 								if(pF(resp[j]['lat']) == pF(transmit[i]['Latitude']) && pF(resp[j]['lon']) == pF(transmit[i]['Longitude'])){
 									if(transmit[i]['Signal power at receiver dBm'] < -130)
 										continue;
