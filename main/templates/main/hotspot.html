@@ -228,9 +228,11 @@
 						for(i = 0 ; i < transmit.length ; i ++)
 						{
 							for(j = 0; j < resp.length ; j ++) {
+								if(transmit[i]['Signal power at receiver dBm'] < -130)
+									continue;
+								if(transmit[i]['Distance to receiver km'] > 13)
+									continue;
 								if(pF(resp[j]['lat']) == pF(transmit[i]['Latitude']) && pF(resp[j]['lon']) == pF(transmit[i]['Longitude'])){
-									if(transmit[i]['Signal power at receiver dBm'] < -130)
-										continue;
 									result_json[hSpot['gwid']].push({
 										'gateway_id': resp[j]['gwid'],
 										'rssi' : transmit[i]['Signal power at receiver dBm'],
