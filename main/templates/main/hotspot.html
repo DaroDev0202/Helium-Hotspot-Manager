@@ -196,7 +196,6 @@
 								cloudRF_url['transmitter']['alt'] = elem['height'];
 							cloudRF_url['receiver']['lat'] = hSpot['lat'];
 							cloudRF_url['receiver']['lon'] = hSpot['lon'];
-							console.log(elem);
 							if(!elem.hasOwnProperty('height'))
 								cloudRF_url['receiver']['alt'] = 1;
 							else
@@ -229,25 +228,26 @@
 						{
 							for(j = 0; j < resp.length ; j ++) {
 								if(transmit[i]['Signal power at receiver dBm'] < -130) {
-									console.log('Signal Power at Receiver dBm is ' + transmit[i]['Signal power at receiver dBm'])
 									continue;
 								}
 								if(transmit[i]['Distance to receiver km'] > 13){
-									console.log('Distance to receiver is ' + transmit[i]['Signal power at receiver dBm'] + 'km')
 									continue;
 								}
 								if(pF(resp[j]['lat']) == pF(transmit[i]['Latitude']) && pF(resp[j]['lon']) == pF(transmit[i]['Longitude'])){
 									result_json[hSpot['gwid']].push({
 										'gateway_id': resp[j]['gwid'],
 										'rssi' : transmit[i]['Signal power at receiver dBm'],
-										'weight' : hSpot['weight']
+										'weight' : hSpot['weight'],
+										'distance' : transmit[i]['Distance to receiver km']
 									})
 								}
 							}
 						}
+						var temp = {};
+						temp[hSpot['gwid']] = result_json[hSpot['gwid']]
+						console.log(temp)
 					})
 				}
-				console.log(result_json)
 				download(JSON.stringify(result_json), 'rule.json', 'text/plain');
 				$.unblockUI();
 			}
@@ -292,8 +292,6 @@
                 input.onchange = e => {
                     var file = e.target.files[0];
 
-					console.log(file.type);
-
                     if(file.type != 'application/json') {
                         alert('It is not JSON file format!');
                         return;
@@ -320,7 +318,6 @@
 							processData: false,
 							success : function(resp) {
 								alert("Success to Upload Settings");
-								console.log(resp);
 							},
 							error : function(resp) {
 								alert("Error occured while getting datas in database!");
@@ -341,7 +338,6 @@
 					cache: false,
 					processData: false,
 					success : function(resp) {
-						console.log(resp)
 						alert('Success to update hotspots in database')
 						location.href = '/hotspots'
 						$.unblockUI();
