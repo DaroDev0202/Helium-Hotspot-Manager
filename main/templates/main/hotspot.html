@@ -222,7 +222,6 @@
 					})
 					.then(response => response.json())
 					.then(await function(response){
-						result_json[hSpot['gwid']] = [];
 						var transmit = response['Transmitters'];
 						for(i = 0 ; i < transmit.length ; i ++)
 						{
@@ -234,17 +233,22 @@
 									continue;
 								}
 								if(pF(resp[j]['lat']) == pF(transmit[i]['Latitude']) && pF(resp[j]['lon']) == pF(transmit[i]['Longitude'])){
-									result_json[hSpot['gwid']].push({
-										'gateway_id': resp[j]['gwid'],
+									if(!result_json.hasOwnProperty(resp[j]['gwid']))
+										result_json[resp[j]['gwid']] = [];
+									result_json[resp[j]['gwid']].push({
+										'gateway_id': hSpot['gwid'],
 										'rssi' : transmit[i]['Signal power at receiver dBm'],
 										'weight' : hSpot['weight'],
 									})
+									{% comment %} result_json[hSpot['gwid']].push({
+										'gateway_id': resp[j]['gwid'],
+										'rssi' : transmit[i]['Signal power at receiver dBm'],
+										'weight' : hSpot['weight'],
+									}) {% endcomment %}
 								}
 							}
 						}
 						var temp = {};
-						temp[hSpot['gwid']] = result_json[hSpot['gwid']]
-						console.log(temp)
 					})
 				}
 				download(JSON.stringify(result_json), 'rule.json', 'text/plain');
